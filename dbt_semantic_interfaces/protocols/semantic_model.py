@@ -76,7 +76,7 @@ class SemanticModel(Protocol):
 
     @property
     @abstractmethod
-    def primary_entity(self) -> Optional[str]:  # noqa: D
+    def primary_entity(self) -> Optional[str]:
         """The primary entity for dimensions listed in this model.
 
         This is for cases where there are dimensions in the model, but no entity with primary type. This allows those

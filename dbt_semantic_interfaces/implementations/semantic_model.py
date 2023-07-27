@@ -5,7 +5,6 @@ from typing import Any, List, Optional, Sequence
 from pydantic import validator
 from typing_extensions import override
 
-from dbt_semantic_interfaces.enum_extension import assert_values_exhausted
 from dbt_semantic_interfaces.implementations.base import (
     HashableBaseModel,
     ModelWithMetadataParsing,
@@ -26,7 +25,6 @@ from dbt_semantic_interfaces.references import (
     SemanticModelReference,
     TimeDimensionReference,
 )
-from dbt_semantic_interfaces.type_enums import EntityType
 
 
 class NodeRelation(HashableBaseModel):
@@ -189,19 +187,4 @@ class PydanticSemanticModel(HashableBaseModel, ModelWithMetadataParsing, Protoco
 
     @property
     def primary_entity_reference(self) -> Optional[EntityReference]:  # noqa: D
-        if self.primary_entity is not None:
-            return EntityReference(element_name=self.primary_entity)
-
-        for entity in self.entities:
-            if entity.type is EntityType.PRIMARY:
-                return entity.reference
-            elif (
-                entity.type is EntityType.UNIQUE
-                or entity.type is EntityType.FOREIGN
-                or entity.type is EntityType.NATURAL
-            ):
-                pass
-            else:
-                assert_values_exhausted(entity.type)
-
-        return None
+        return EntityReference(element_name=self.primary_entity) if self.primary_entity is not None else None

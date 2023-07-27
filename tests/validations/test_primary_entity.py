@@ -41,4 +41,4 @@ def test_primary_entity_conflict(simple_semantic_manifest: PydanticSemanticManif
     model_validator = SemanticManifestValidator[PydanticSemanticManifest]([PrimaryEntityRule()])
     errors = model_validator.validate_semantic_manifest(semantic_manifest_copy).errors
     assert len(errors) == 1
-    assert errors[0].message.find("conflicts with the primary_entity field") != -1
+    assert errors[0].message.find("Both should not be present in the model.") != -1
