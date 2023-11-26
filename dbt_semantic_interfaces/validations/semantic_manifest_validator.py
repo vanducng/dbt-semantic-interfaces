@@ -58,7 +58,7 @@ def _validate_manifest_with_one_rule(
     """
     return SemanticManifestValidationResults.from_issues_sequence(
         validation_rule.validate_manifest(semantic_manifest)
-    ).json()
+    ).model_dump_json()
 
 
 class SemanticManifestValidator(Generic[SemanticManifestT]):
@@ -138,7 +138,7 @@ class SemanticManifestValidator(Generic[SemanticManifestT]):
         ]
         for future in as_completed(futures):
             res = future.result()
-            result = SemanticManifestValidationResults.parse_raw(res)
+            result = SemanticManifestValidationResults.model_validate_json(res)
             results.append(result)
 
         return SemanticManifestValidationResults.merge(results)

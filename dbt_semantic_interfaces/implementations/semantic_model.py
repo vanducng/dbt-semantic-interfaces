@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional, Sequence
+from typing import List, Optional, Sequence
 
-from pydantic import validator
+from pydantic import model_validator
 from typing_extensions import override
 
 from dbt_semantic_interfaces.implementations.base import (
@@ -35,25 +35,15 @@ class NodeRelation(HashableBaseModel):
     database: Optional[str] = None
     relation_name: str = ""
 
-    @validator("relation_name", always=True)
-    @classmethod
-    def __create_default_relation_name(cls, value: Any, values: Any) -> str:  # type: ignore[misc]
+    @model_validator(mode="after")
+    def __create_default_relation_name(self) -> "NodeRelation":
         """Dynamically build the dot path for `relation_name`, if not specified."""
-        if value:
-            # Only build the relation_name if it was not present in config.
-            return value
-
-        alias, schema, database = values.get("alias"), values.get("schema_name"), values.get("database")
-        if alias is None or schema is None:
-            raise ValueError(
-                f"Failed to build relation_name because alias and/or schema was None. schema: {schema}, alias: {alias}"
-            )
-
-        if database is not None:
-            value = f"{database}.{schema}.{alias}"
-        else:
-            value = f"{schema}.{alias}"
-        return value
+        if not self.relation_name:
+            if self.database is not None:
+                self.relation_name = f"{self.database}.{self.schema_name}.{self.alias}"
+            else:
+                self.relation_name = f"{self.schema_name}.{self.alias}"
+        return self
 
     @staticmethod
     def from_string(sql_str: str) -> NodeRelation:  # noqa: D
@@ -73,7 +63,7 @@ class PydanticSemanticModelDefaults(HashableBaseModel, ProtocolHint[SemanticMode
     def _implements_protocol(self) -> SemanticModelDefaults:  # noqa: D
         return self
 
-    agg_time_dimension: Optional[str]
+    agg_time_dimension: Optional[str] = None
 
 
 class PydanticSemanticModel(HashableBaseModel, ModelWithMetadataParsing, ProtocolHint[SemanticModel]):
@@ -84,17 +74,17 @@ class PydanticSemanticModel(HashableBaseModel, ModelWithMetadataParsing, Protoco
         return self
 
     name: str
-    defaults: Optional[PydanticSemanticModelDefaults]
-    description: Optional[str]
     node_relation: NodeRelation
+    defaults: Optional[PydanticSemanticModelDefaults] = None
+    description: Optional[str] = None
 
-    primary_entity: Optional[str]
+    primary_entity: Optional[str] = None
     entities: Sequence[PydanticEntity] = []
     measures: Sequence[PydanticMeasure] = []
     dimensions: Sequence[PydanticDimension] = []
     label: Optional[str] = None
 
-    metadata: Optional[PydanticMetadata]
+    metadata: Optional[PydanticMetadata] = None
 
     @property
     def entity_references(self) -> List[LinkableElementReference]:  # noqa: D
